@@ -75,6 +75,17 @@ pub struct RootSystemDescriptionPointer {
     reserved: [u8; 3],
 }
 impl RootSystemDescriptionPointer {
+    /// Returns true if the rsdp signature is "RSD PTR "; otherwise, false.
+    pub const fn validate_signature(&self) -> bool {
+        self.signature[0] == b'R'
+            && self.signature[1] == b'S'
+            && self.signature[2] == b'D'
+            && self.signature[3] == b' '
+            && self.signature[4] == b'P'
+            && self.signature[5] == b'T'
+            && self.signature[6] == b'R'
+            && self.signature[7] == b' '
+    }
     /// Returns true if the rsdt or xsdt address matches the signature for RSDT or XSDT, more for simplicity than anything else.
     pub const fn validate_sdt_signature(&self) -> bool {
         unsafe {
