@@ -1,0 +1,29 @@
+- MADT iter
+  - GICRedistributor impl?
+  - HyperTransportPIC impl?
+  - LegacyIOPIC impl?
+  - LPCPIC impl?
+  - MSIPIC impl?
+- MPST todo
+- PCCT iter
+- RASF incomplete
+- RAS2 todo
+- SRAT iter
+  - Memory impl?
+
+Complete:
+
+- BGRT
+- CPEP
+- DSDT
+- ECDT
+- FACS atomic ok?
+- FADT
+- MSCT
+- PSDT
+- RSDP
+- RSDT
+- SBST
+- SLIT
+- SSDT
+- XSDT

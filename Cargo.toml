@@ -1,6 +1,9 @@
 [package]
 name = "raw-acpi"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
+version = "0.0.1"
+edition = "2015"
+authors = ["JJ"]
+license = "MIT OR Apache-2.0"
+description = "Simply ACPI, in Rust."
+repository = "https://github.com/JJtheJJpro/raw-acpi"
+readme = "README.md"
