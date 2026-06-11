@@ -10,10 +10,9 @@ use crate::SDTHeader;
 pub struct PersistentSystemDescriptionTable {
     /// - **Signature** - "PSDT"
     pub header: SDTHeader,
-    /// The bytes of AML code.
-    pub def_block: [u8; 0],
 }
 impl PersistentSystemDescriptionTable {
+    /// The bytes of AML code.
     pub const fn def_block(&self) -> &[u8] {
         // SAFETY: I sure hope the OEM doesn't frick things up...
         unsafe {

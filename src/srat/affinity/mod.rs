@@ -5,6 +5,7 @@ pub mod gicc;
 pub mod memory;
 pub mod proc_local_apic;
 pub mod proc_local_x2apic;
+pub mod rintc;
 
 #[derive(Copy, Clone)]
 /// ## Flags - Processor Local APIC/SAPIC Affinity Structure

@@ -3,6 +3,52 @@ pub mod affinity;
 use crate::SDTHeader;
 
 #[derive(Copy, Clone)]
+pub enum AffinityTypes {
+    ProcessorLocalAPIC,
+    Memory,
+    ProcessorLocalx2APIC,
+    GICC,
+    GICInterruptTranslationService,
+    GenericInitiator,
+    GenericPort,
+    RINTC,
+}
+impl AffinityTypes {
+    pub fn from(value: u8) -> Option<Self> {
+        match value {
+            0x00 => Some(Self::ProcessorLocalAPIC),
+            0x01 => Some(Self::Memory),
+            0x02 => Some(Self::ProcessorLocalx2APIC),
+            0x03 => Some(Self::GICC),
+            0x04 => Some(Self::GICInterruptTranslationService),
+            0x05 => Some(Self::GenericInitiator),
+            0x06 => Some(Self::GenericPort),
+            0x07 => Some(Self::RINTC),
+
+            _ => None,
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct TypeLength {
+    r#type: u8,
+    length: u8,
+}
+impl TypeLength {
+    pub fn raw_type(&self) -> u8 {
+        self.r#type
+    }
+    /// Returns None if value is reserved for OEM use.
+    pub fn r#type(&self) -> Option<AffinityTypes> {
+        AffinityTypes::from(self.r#type)
+    }
+    pub fn length(&self) -> u8 {
+        self.length
+    }
+}
+
+#[derive(Copy, Clone)]
 #[repr(C, packed)]
 /// ## Device Handle - ACPI
 pub struct ACPIDeviceHandle {
@@ -55,17 +101,29 @@ pub union DeviceHandle {
 /// a _PXM object must exist for the processor’s device or one of its ancestors in the ACPI Namespace.
 ///
 /// Note: SRAT is the place where proximity domains are defined, and _PXM provides a mechanism to associate a device object (and its children) to an SRAT-defined proximity domain.
-pub struct SRAT {
+pub struct SystemResourceAffinityTable {
     /// - **Signature** - "SRAT"
     pub header: SDTHeader,
     /// **JJ's Note: History indicates that these were gonna be used for describing NUMA topology, but NUMA turned out to be static, making these fields useless.
-    /// The System Locality Information Table was introduced not too long after SRAT, which removed the need for global SRAT-level metadata and runtime interpretation hints.**
+    /// The System Locality Information Table (SLIT) was introduced not too long after SRAT, which removed the need for global SRAT-level metadata and runtime interpretation hints.**
     ///
     /// **From that point on, firmware vendors decided never to implement it.**
     ///
     /// **The ACPI spec in uefi.org does state that the 32-bit field is reserved to be 1 for backwards compatibility.**
     reserved0: u32,
     reserved1: u64,
+}
+impl SystemResourceAffinityTable {
     /// A list of static resource allocation structures for the platform.
-    pub static_resource_allocation_structure: [u8; 0],
+    ///
+    /// **JJ's Note: I'm not sure what the best way is to implement this.  I've decided for right now to just have this return the buffer reference containing the structures.**
+    pub const fn static_resource_allocation_structure(&self) -> &[u8] {
+        // SAFETY: I sure hope the OEM doesn't frick things up...
+        unsafe {
+            core::slice::from_raw_parts(
+                (self as *const _ as *const u8).add(size_of::<Self>()),
+                (self.header.length as usize - size_of::<Self>()) / 8,
+            )
+        }
+    }
 }

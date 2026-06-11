@@ -5,7 +5,7 @@ impl MemoryAffinityStructureFlags {
     /// If clear, the OSPM ignores the contents of the Memory Affinity Structure.
     /// This allows system firmware to populate the SRAT with a static number of structures but only enable then as necessary.
     pub const fn enabled(&self) -> bool {
-        self.0 & 0b001 != 0
+        self.0 & 0b0001 != 0
     }
     /// The information conveyed by this bit depends on the value of the Enabled bit.
     ///
@@ -15,11 +15,17 @@ impl MemoryAffinityStructureFlags {
     ///
     /// If the Enabled bit is clear, the OSPM will ignore the contents of the Memory Affinity Structure
     pub const fn hot_pluggable(&self) -> bool {
-        self.0 & 0b010 != 0
+        self.0 & 0b0010 != 0
     }
     /// If set, the memory region represents Non-Volatile memory
     pub const fn non_volatile(&self) -> bool {
-        self.0 & 0b100 != 0
+        self.0 & 0b0100 != 0
+    }
+    /// Indicates whether this memory is intended for specific-purpose usage.
+    /// 
+    /// This field is functionally analogous to the UEFI EFI_MEMORY_SP attribute. See the UEFI specification for more details on this attribute.
+    pub const fn specific_purpose(&self) -> bool {
+        self.0 & 0b1000 != 0
     }
     // JJ here, the rest of the bits are reserved; no need to implement.
 }

@@ -1,22 +1,68 @@
 use crate::{
-    SDTHeader,
     pcct::subspace::{
         GenericCommunicationsChannelCommandField, GenericCommunicationsChannelStatusField,
     },
+    SDTHeader,
 };
 
-//#[derive(Copy, Clone)]
-//#[repr(C, packed)]
-//pub struct ParameterBlock {
-//    pub r#type: u16,
-//    pub version: u16,
-//    pub length: u16,
-//    pub patrol_scrub_command: u16,
-//    pub requested_address_range: u128,
-//    pub actual_address_range: u128,
-//    pub flags: u16,
-//    pub requested_speed: u8,
-//}
+#[derive(Copy, Clone)]
+#[repr(C, packed)]
+/// ## Parameter Block
+///
+/// The following table describes the Parameter Blocks.
+///
+/// The structure is used to pass parameters for controlling the corresponding RAS Feature.
+///
+/// Each RAS Feature is assigned a TYPE number, which is the bit index into the RAS capabilities bitmap.
+pub struct ParameterBlock {
+    /// 0x0000 - Patrol scrub
+    pub r#type: u16,
+    /// - **Byte 0** - Minor Version
+    /// - **Byte 1** - Major Version
+    pub version: u16,
+    /// Length in bytes of the entire parameter block structure
+    pub length: u16,
+    /// - **0x01** - GET_PATROL_PARAMETERS
+    /// - **0x02** - START_PATROL_SCRUBBER
+    /// - **0x03** - STOP_PATROL_SCRUBBER
+    pub patrol_scrub_command: u16,
+    /// OSPM Specifies the base of the address range to be patrol scrubbed.
+    ///
+    /// OSPM sets this parameter for the following commands: GET_PATROL_PARAMETERS and START_PATROL_SCRUBBER
+    pub requested_address_start: u64,
+    /// OSPM Specifies the size of the address range to be patrol scrubbed.
+    ///
+    /// OSPM sets this parameter for the following commands: GET_PATROL_PARAMETERS and START_PATROL_SCRUBBER
+    pub requested_address_size: u64,
+    /// The platform returns this value in response to GET_PATROL_PARAMETERS.
+    ///
+    /// The platform calculates the nearest patrol scrub boundary address from where it can start.
+    /// This range should be a superset of the Requested Address Range. Base of the address
+    pub actual_address_start: u64,
+    /// The platform returns this value in response to GET_PATROL_PARAMETERS.
+    ///
+    /// The platform calculates the nearest patrol scrub boundary address from where it can start.
+    /// This range should be a superset of the Requested Address Range. Size of the address
+    pub actual_address_size: u64,
+    /// The platform returns this value in response to GET_PATROL_PARAMETERS:
+    /// - **Bit [[0]]** - Will be set if patrol scrubber is already running for address range specified in "Actual Address Range"
+    /// - **Bits [[3:1]]** - Current Patrol Speeds, if Bit [[0]] is set:
+    ///     - **000b** - Slow
+    ///     - **100b** - Medium
+    ///     - **111b** - Fast
+    ///     - All other combinations are reserved.
+    /// - **Bits [[15:4]]** - RESERVED
+    pub flags: u16,
+    /// The OSPM Sets this field as follows, for the START_PATROL_SCRUBBER command:
+    /// - **Bit [[0]]** - Will be set if patrol scrubber is already running for address range specified in "Actual Address Range"
+    /// - **Bits [[2:0]]** - Requested Patrol Speeds
+    ///     - **000b** - Slow
+    ///     - **100b** - Medium
+    ///     - **111b** - Fast
+    ///     - All other combinations are reserved.
+    /// - **Bits [[7:3]]** - RESERVED
+    pub requested_speed: u8,
+}
 
 #[derive(Copy, Clone)]
 /// ## Platform RAS Capabilities Bitmap
@@ -42,7 +88,7 @@ pub struct RASFCommunicationChannelSMR {
     /// PCC command field.
     ///
     /// See the Platform Communications Channel (PCC).
-    /// 
+    ///
     /// Command value 0x01 will execute RASF command.  The rest of the values are reserved.
     pub command: GenericCommunicationsChannelCommandField,
     /// PCC status field.
@@ -76,19 +122,27 @@ pub struct RASFCommunicationChannelSMR {
 }
 impl RASFCommunicationChannelSMR {
     /// Start of the parameter blocks, the structure of which is shown in the Parameter Block Structure for PATROL_SCRUB.
-    /// 
+    ///
     /// These parameter blocks are used as communication mailbox between the OSPM and the platform, and there is 1 parameter block for each RAS feature.
-    /// 
+    ///
     /// NOTE: There can be only on parameter block per type.
-    pub const fn parameter_blocks(&self) -> ! {
-        todo!()
+    pub const fn parameter_blocks(&self) -> &[ParameterBlock] {
+        // SAFETY: I sure hope the OEM doesn't frick things up...
+        unsafe {
+            core::slice::from_raw_parts(
+                (self as *const _ as *const u8).add(size_of::<RASFCommunicationChannelSMR>())
+                    as *const ParameterBlock,
+                (self.rasf_parameter_block_num as usize - size_of::<RASFCommunicationChannelSMR>())
+                    / size_of::<ParameterBlock>(),
+            )
+        }
     }
 }
 
 #[derive(Copy, Clone)]
 #[repr(C, packed)]
 /// ## ACPI RAS Feature Table (RASF)
-pub struct RASF {
+pub struct RASFeatureTable {
     /// - **Signature** - "RASF"
     pub header: SDTHeader,
     /// Identifier of the RASF Platform Communication Channel.

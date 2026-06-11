@@ -118,19 +118,10 @@ pub struct FirmwareACPIControl {
     ///   - Memory address translation / paging must be disabled
     ///   - 4 GB flat address space for all segment registers
     pub x_firmware_waking_vector: u64,
-    /// 3-Version of this table.
+    /// Version of this table.
     pub version: u8,
     reserved1: [u8; 3],
     /// OSPM enabled firmware control structure flags. Platform firmware must initialize this field to zero.
-    pub ospem_flags: u32,
+    pub ospem_flags: OEFACSFlags,
     reserved2: [u8; 24],
-}
-impl FirmwareACPIControl {
-    /// **JJ's Note: This is just for now, once I get the ACPI stuff done, I'll learn more about this.**
-    pub const fn atomic_global_lock(&self) -> &core::sync::atomic::AtomicU32 {
-        unsafe {
-            &*((self as *const Self).add(0x10) as *const u32
-                as *const core::sync::atomic::AtomicU32)
-        }
-    }
 }

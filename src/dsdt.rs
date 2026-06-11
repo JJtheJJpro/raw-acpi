@@ -12,10 +12,9 @@ pub struct DifferentiatedSystemDescriptionTable {
     /// - **Revision** - This field also sets the global integer width for the AML interpreter.
     /// Values less than two will cause the interpreter to use 32-bit integers and math. Values of two and greater will cause the interpreter to use full 64-bit integers and math.
     pub header: SDTHeader,
-    /// The bytes of AML code.
-    pub def_block: [u8; 0],
 }
 impl DifferentiatedSystemDescriptionTable {
+    /// The bytes of AML code.
     pub const fn def_block(&self) -> &[u8] {
         // SAFETY: I sure hope the OEM doesn't frick things up...
         unsafe {

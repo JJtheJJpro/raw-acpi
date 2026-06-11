@@ -61,10 +61,7 @@ impl MaximumSystemCharacteristicsTable {
             core::slice::from_raw_parts(
                 (self as *const _ as *const u8).add(self.offset_prox_dom_info as usize)
                     as *const MaximumProximityDomainInformation,
-                (self.header.length as usize)
-                    .checked_sub(self.offset_prox_dom_info as usize)
-                    .expect("INCORRECT MATH: MSCT impl --- slice reference parsing (offset beyond table length)")
-                    / core::mem::size_of::<MaximumProximityDomainInformation>(),
+                self.max_number_of_proximity_domains as usize,
             )
         }
     }

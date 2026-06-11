@@ -21,7 +21,7 @@ pub enum InterruptSourceOverrideTriggerMode {
 
 #[derive(Copy, Clone)]
 /// The MPS INTI Flags are identical to the flags used in the MPS version 1.4 specification (Table 4-10).
-/// 
+///
 /// The Polarity flags are the PO bits and the Trigger Mode flags are the EL bits.
 pub struct MPSINTIFlags(u16);
 impl MPSINTIFlags {
@@ -39,7 +39,7 @@ impl MPSINTIFlags {
     }
     /// Trigger mode of the APIC I/O Input signals.
     pub const fn trigger_mode(&self) -> InterruptSourceOverrideTriggerMode {
-        match self.0 & 0b1100 {
+        match (self.0 & 0b1100) >> 2 {
             0b00 => InterruptSourceOverrideTriggerMode::Conform,
             0b01 => InterruptSourceOverrideTriggerMode::EdgeTriggered,
             0b10 => panic!(

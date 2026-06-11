@@ -1,7 +1,7 @@
 //! # ACPI System Description Tables
 //!
 //! This rust library defines all the ACPI-defined System Description Tables.  Such tables and more information can be found
-//! <a href="https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#acpi-system-description-tables">here</a>.
+//! <a href="https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#acpi-system-description-tables">here</a>.
 
 #![no_std]
 
@@ -72,8 +72,11 @@ pub const SDT_HEADER_SIZE: usize = core::mem::size_of::<SDTHeader>();
 /// All system description tables begin with the structure shown in the SDTHeader Fields.
 /// The signature field in this table determines the content of the system description table.
 pub struct SDTHeader {
-    /// The ASCII string representation of the table identifier. Note that if OSPM finds a signature in a table that is not listed in
-    /// <a href="https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#description-header-signatures-for-tables-defined-by-acpi">this table</a>, then OSPM ignores the entire table (it is not loaded into ACPI namespace);
+    /// The ASCII string representation of the table identifier.
+    /// 
+    /// Note that if OSPM finds a signature in a table that is not listed in
+    /// <a href="https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#description-header-signatures-for-tables-defined-by-acpi">this table</a>,
+    /// then OSPM ignores the entire table (it is not loaded into ACPI namespace);
     /// OSPM ignores the table even though the values in the Length and Checksum fields are correct.
     pub signature: [u8; 4],
     /// The length of the table, in bytes, including the header, starting from offset 0. This field is used to record the size of the entire table.

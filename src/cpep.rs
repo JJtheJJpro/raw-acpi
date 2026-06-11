@@ -31,10 +31,11 @@ pub struct CorrectedPlatformErrorPolling {
     /// - **Signature** - "CPEP"
     pub header: SDTHeader,
     reserved: u64,
-    /// A list of Corrected Platform Error Polling Processor structures for the platform.
-    pub cpep_processor_structures: [CorrectedPlatformErrorPollingProcessor; 0],
 }
 impl CorrectedPlatformErrorPolling {
+    /// A list of Corrected Platform Error Polling Processor structures for the platform.
+    /// 
+    /// **JJ's Note: until another structure structure exists pertaining to this field, this will stay as such.**
     pub const fn cpep_processor_structures(&self) -> &[CorrectedPlatformErrorPollingProcessor] {
         // SAFETY: I sure hope the OEM doesn't frick things up...
         unsafe {

@@ -1,29 +1,119 @@
-pub mod interrupt_source_override;
-pub mod ioapic;
-pub mod local_apic_nmi;
-pub mod nmi_source;
-pub mod proc_local_apic;
+pub mod aplic;
 pub mod bridge_io_pic;
 pub mod core_pic;
 pub mod extend_io_pic;
+pub mod gic_cpu_interface;
 pub mod gic_distributor;
-pub mod gic_interrupt_translation_service;
+pub mod gic_its;
 pub mod gic_msi_frame;
 pub mod gic_redistributor;
-pub mod giccpu_interface;
 pub mod hyper_transport_pic;
+pub mod imsic;
+pub mod interrupt_source_override;
+pub mod ioapic;
 pub mod iosapic;
 pub mod legacy_io_pic;
-pub mod local_api_address_override;
+pub mod local_apic_address_override;
+pub mod local_apic_nmi;
 pub mod local_sapic;
 pub mod local_x2apic_nmi;
 pub mod lpc_pic;
 pub mod msi_pic;
 pub mod multiprocessor_wakeup;
+pub mod nmi_source;
 pub mod platform_interrupt_source;
+pub mod plic;
+pub mod processor_local_apic;
 pub mod processor_local_x2apic;
+pub mod rintc;
 
 use crate::SDTHeader;
+
+#[derive(Copy, Clone)]
+pub enum ICSTypes {
+    ProcessorLocalAPIC,
+    IOAPIC,
+    InterruptSourceOverride,
+    NMISource,
+    LocalAPICNMI,
+    LocalAPICAddressOverride,
+    IOSAPIC,
+    LocalSAPIC,
+    PlatformInterruptSource,
+    ProcessorLocalx2APIC,
+    Localx2APICNMI,
+    GICCPUInterface,
+    GICDistributor,
+    GICMSIFrame,
+    GICRedistributor,
+    GICInterruptTranslationService,
+    MultiprocessorWakeup,
+    CoreProgrammableInterruptController,
+    LegacyIOProgrammableInterruptController,
+    HyperTransportProgrammableInterruptController,
+    ExtendIOProgrammableInterruptController,
+    MSIProgrammableInterruptController,
+    BridgeIOProgrammableInterruptController,
+    LPCProgrammableInterruptController,
+    RISCVHartLocalInterruptController,
+    RISCVIncomingMSIController,
+    RISCVAdvancedPlatformLevelInterruptController,
+    RISCVPlatformLevelInterruptController,
+}
+impl ICSTypes {
+    pub fn from(value: u8) -> Option<Self> {
+        match value {
+            0x00 => Some(Self::ProcessorLocalAPIC),
+            0x01 => Some(Self::IOAPIC),
+            0x02 => Some(Self::InterruptSourceOverride),
+            0x03 => Some(Self::NMISource),
+            0x04 => Some(Self::LocalAPICNMI),
+            0x05 => Some(Self::LocalAPICAddressOverride),
+            0x06 => Some(Self::IOSAPIC),
+            0x07 => Some(Self::LocalSAPIC),
+            0x08 => Some(Self::PlatformInterruptSource),
+            0x09 => Some(Self::ProcessorLocalx2APIC),
+            0x0A => Some(Self::Localx2APICNMI),
+            0x0B => Some(Self::GICCPUInterface),
+            0x0C => Some(Self::GICDistributor),
+            0x0D => Some(Self::GICMSIFrame),
+            0x0E => Some(Self::GICRedistributor),
+            0x0F => Some(Self::GICInterruptTranslationService),
+            0x10 => Some(Self::MultiprocessorWakeup),
+            0x11 => Some(Self::CoreProgrammableInterruptController),
+            0x12 => Some(Self::LegacyIOProgrammableInterruptController),
+            0x13 => Some(Self::HyperTransportProgrammableInterruptController),
+            0x14 => Some(Self::ExtendIOProgrammableInterruptController),
+            0x15 => Some(Self::MSIProgrammableInterruptController),
+            0x16 => Some(Self::BridgeIOProgrammableInterruptController),
+            0x17 => Some(Self::LPCProgrammableInterruptController),
+            0x18 => Some(Self::RISCVHartLocalInterruptController),
+            0x19 => Some(Self::RISCVIncomingMSIController),
+            0x1A => Some(Self::RISCVAdvancedPlatformLevelInterruptController),
+            0x1B => Some(Self::RISCVPlatformLevelInterruptController),
+
+            _ => None,
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct TypeLength {
+    r#type: u8,
+    length: u8,
+}
+impl TypeLength {
+    pub fn raw_type(&self) -> u8 {
+        self.r#type
+    }
+    /// Returns None if value is reserved for OEM use.
+    pub fn r#type(&self) -> Option<ICSTypes> {
+        ICSTypes::from(self.r#type)
+    }
+    pub fn length(&self) -> u8 {
+        self.length
+    }
+}
 
 #[derive(Copy, Clone)]
 /// ## Local (S)APIC Flags
@@ -32,7 +122,7 @@ impl LocalAPICFlags {
     /// If this bit is set the processor is ready for use. If this bit is clear and the Online Capable bit is set,
     /// system hardware supports enabling this processor during OS runtime.<br>
     /// If this bit is clear and the Online Capable bit is also clear, this processor is unusable,
-    /// and OSPM shall ignore the contents of the Processor Local APIC Structure.
+    /// and OSPM shall ignore the contents of the given structure.
     pub const fn enabled(&self) -> bool {
         self.0 & 0b01 != 0
     }
@@ -88,15 +178,27 @@ impl MADTFlags {
 /// Only legacy systems should continue with this usage. On the Itanium architecture only, a _UID is provided for the Processor() that is a string object.
 /// This usage of _UID is also deprecated since it can preclude an OSPM from being able to match a processor to a non-enumerable device, such as those defined in the MADT.
 /// From ACPI Specification 6.3 onward, all processor objects for all architectures except Itanium must now use Device() objects with an _HID of ACPI0007, and use only integer _UID values.
-pub struct MADT {
+pub struct MultipleAPICDescriptionTable {
     /// - **Signature** - "APIC"
     pub header: SDTHeader,
     /// The 32-bit physical address at which each processor can access its local interrupt controller.
     pub local_interrupt_controller_address: u32,
     /// Multiple APIC flags.
     pub flags: MADTFlags,
+}
+impl MultipleAPICDescriptionTable {
     /// A list of interrupt controller structures for this implementation.
     ///
-    /// This list will contain all of the structures from Interrupt Controller Structure Types needed to support this platform. These structures are described in the following sections.
-    pub interrupt_controller_structure: [u8; 0],
+    /// This list will contain all of the structures from Interrupt Controller Structure Types needed to support this platform.
+    ///
+    /// **JJ's Note: I'm not sure what the best way is to implement this.  I've decided for right now to just have this return the buffer reference containing the structures.**
+    pub const fn interrupt_controller_structure(&self) -> &[u8] {
+        // SAFETY: I sure hope the OEM doesn't frick things up...
+        unsafe {
+            core::slice::from_raw_parts(
+                (self as *const _ as *const u8).add(size_of::<Self>()),
+                (self.header.length as usize - size_of::<Self>()) / 8,
+            )
+        }
+    }
 }

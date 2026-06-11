@@ -8,11 +8,11 @@ pub struct ExtendedSystemDescriptionTable {
     /// - **Revision** - 1
     /// - **OEM Table ID** - For the XSDT, the table ID is the manufacture model ID. This field must match the OEM Table ID in the FADT structure.
     pub header: SDTHeader,
-    /// An array of 64-bit physical addresses that point to other System Description Tables.
-    /// OSPM assumes at least the System Description Table is addressable, and then can further address the table based upon its Length field.
-    pub entry: [u64; 0],
 }
 impl ExtendedSystemDescriptionTable {
+    /// An array of 64-bit physical addresses that point to other System Description Tables.
+    ///
+    /// OSPM assumes at least the System Description Table is addressable, and then can further address the table based upon its Length field.
     pub const fn entry(&self) -> &[u64] {
         // SAFETY: I sure hope the OEM doesn't frick things up...
         unsafe {

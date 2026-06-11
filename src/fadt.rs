@@ -246,7 +246,7 @@ impl FADTARMBootArch {
     }
     /// 1 if HVC must be used as the PSCI conduit.instead of SMC.
     pub const fn psci_use_hvc(&self) -> bool {
-        self.0 & 0b01 != 0
+        self.0 & 0b10 != 0
     }
     // JJ here, the rest of the bits are reserved; no need to implement.
 }

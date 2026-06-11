@@ -8,7 +8,7 @@ pub struct LegacyIOProgrammableInterruptController {
     pub r#type: u8,
     /// Length of the Legacy I/O Programmable Interrupt Controller Structure in bytes.
     ///
-    /// **JJ's Note: There doesn't seem to be any variable-sized fields in this struct.  The size is 23 bytes...**
+    /// **JJ's Note: There doesn't seem to be any variable-sized fields in this struct.  The size is 23 bytes.  Padding?**
     pub length: u8,
     /// - **0x00** - Invalid
     /// - **0x01** - LIO PIC v1

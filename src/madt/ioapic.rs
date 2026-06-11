@@ -19,7 +19,7 @@ pub struct IOAPIC {
     /// The 32-bit physical address to access this I/O APIC. Each I/O APIC resides at a unique address.
     pub io_apic_address: u32,
     /// The global system interrupt number where this I/O APIC's interrupt inputs start.
-    /// 
+    ///
     /// The number of interrupt inputs is determined by the I/O APIC's Max Redir Entry register.
     pub global_system_interrupt_base: u32,
 }

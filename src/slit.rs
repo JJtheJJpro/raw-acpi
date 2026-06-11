@@ -18,12 +18,12 @@ use crate::{SDT_HEADER_SIZE, SDTHeader};
 /// This provides the capability to describe the scenario where the relative distances for the two directions between System Localities is different.
 ///
 /// The diagonal elements of the matrix, the relative distances from a System Locality to itself are normalized to a value of 10. The relative distances for the non-diagonal elements are scaled to be relative to 10.
-/// For example, if the relative distance from System Locality i to System Locality j is 2.4, a value of 24 is stored in table entry i*N+ j and in j*N+ i, where N is the number of System Localities.
+/// For example, if the relative distance from System Locality i to System Locality j is 2.4, a value of 24 is stored in table entry i\*N+ j and in j\*N+ i, where N is the number of System Localities.
 ///
 /// If one locality is unreachable from another, a value of 255 (0xFF) is stored in that table entry. Distance values of 0-9 are reserved and have no meaning.
 /// 
 /// **JJ's Note: Even though the entry field in specs say it's a 2-D array, having any kernel use it as a 2-D array destroys performance.<br>
-/// The best way to use the entry field is to use it as a flat slice.  This is the reason why you don't see the entry field in the struct itself.**
+/// The best way to use the entry field is to use it as a flat slice and do the indexing yourself.  Suck it up.**
 pub struct SystemLocalityInformationTable {
     /// - **Signature** - "SLIT"
     pub header: SDTHeader,

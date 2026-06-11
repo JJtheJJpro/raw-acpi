@@ -25,16 +25,18 @@ pub struct EmbeddedControllerBootResourcesTable {
     pub uid: u32,
     /// The bit assignment of the SCI interrupt within the GPEx_STS register of a GPE block described in the FADT that the embedded controller triggers.
     pub gpe_bit: u8,
-    /// ASCII, null terminated, string that contains a fully qualified reference to the namespace object that is this embedded controller device (for example, "\_SB.PCI0.ISA.EC").
-    /// Quotes are omitted in the data field.
-    pub ec_id: [u8; 0],
 }
 impl EmbeddedControllerBootResourcesTable {
+    /// ASCII, null terminated, string that contains a fully qualified reference to the namespace object that is this embedded controller device (for example, "\_SB.PCI0.ISA.EC").
+    /// Quotes are omitted in the data field.
+    /// 
+    /// **JJ's Note: the way this is implemented right now may be incorrectly assuming that the EC_ID is included in the entire length of the struct itself.**
     pub const fn ec_id(&self) -> &CStr {
         unsafe {
             CStr::from_bytes_with_nul_unchecked(core::slice::from_raw_parts(
-                (self as *const _ as *const u8).add(0x41),
-                self.header.length as usize - 0x41,
+                (self as *const _ as *const u8)
+                    .add(size_of::<EmbeddedControllerBootResourcesTable>()),
+                self.header.length as usize - size_of::<EmbeddedControllerBootResourcesTable>(),
             ))
         }
     }
