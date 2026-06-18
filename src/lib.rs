@@ -18,6 +18,7 @@ pub mod msct;
 pub mod pcct;
 pub mod psdt;
 pub mod rasf;
+pub mod ras2;
 pub mod rsdp;
 pub mod rsdt;
 pub mod sbst;

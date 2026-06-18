@@ -1,7 +1,6 @@
 - MPST todo
 - PCCT iter
-- RASF incomplete
-- RAS2 todo
+- RAS2 incomplete
 
 Complete:
 
@@ -22,3 +21,4 @@ Complete:
 - SRAT
 - CPEP
 - MSCT
+- RASF (more reading and work)
